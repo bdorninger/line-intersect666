@@ -6,12 +6,57 @@ import {
   LineSegment,
 } from './data-point-util';
 
-import { SeriesMetadata } from '../services/chart-types';
-import {
-  LimitChecker,
-  LimitCheckOptions,
-  LimitCheckResult,
-} from './limit-checker';
+
+/**
+ * Basic args common to all limit checker functions
+ */
+export interface LimitCheckOptions {
+  /**
+   * chart The chart object
+   */
+  chart: Chart;
+  /**
+   * The index of the dataset the moved point belongs to
+   */
+  datasetIndex: number;
+  /**
+   * The index of the changed point within that dataset
+   */
+  elemIndex: number;
+
+  /**
+   * the metadata for the series containing the changed point
+   */
+  seriesMeta?: {
+    upperLimitSeries?: string,
+    lowerLimitSeries?:string
+  }
+}
+
+export interface LimitChecker {
+  /**
+   * Determines, if a given point p is within its limits
+   *
+   * @options the basic options (chart, datasetIndex, element index, series metadata)
+   * @param p the point which shall be tested against the limits
+   */
+  isValueWithinLimits(p: Point): LimitCheckResult;
+}
+
+export interface LimitCheckResult {
+  /**
+   * true, if the checker located the position within the x/y limits
+   */
+  inLimits: boolean;
+
+  /**
+   * an optional suggested position where the dragged point should in fact be
+   *
+   * e.g. relevant when user is doing quick/sloppy drag and drop ops, with drag events being having long distances
+   */
+  correctedPosition?: Point;
+}
+
 
 /**
  * Service providing methods to find chart point movement constraints
@@ -188,7 +233,10 @@ export class LineIntersectingLimitChecker implements LimitChecker {
    */
   private findLimitSetIndices(
     chart: Chart,
-    editableSeriesMetadata?: SeriesMetadata,
+    editableSeriesMetadata?: {
+      upperLimitSeries?: string,
+      lowerLimitSeries?:string
+    },
   ) {
     let upper = -1;
     let lower = -1;
