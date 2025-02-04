@@ -28,12 +28,15 @@ export function len(s: LineSegment): number {
     }
 }
 
-export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down'): LineSegment & { k: number, d: number} {
+export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down', lastdx?: number): { seg: LineSegment & { k: number, d: number}, dx: number } {
     console.log(`half: k: ${s.k}, d: ${s.d}`, s.b.x*s.k)
-    const dx = s.b.x - s.a.x;
+    const dx = lastdx ? lastdx : s.b.x - s.a.x;
     // const dy = s.b.y - s.a.y;
     
-    // Sonderfälle: k is INF
+    // TODO: special case k is INF, i.e. vertical line of drag
+    // iterative: directly manipulate sby!
+    // exact: would need limit curve's lin seg that goes thru sbx.
+
     const newx = s.b.x + (dir==='down' ? (-dx/2):dx/2);
     const nseg = {
         a: s.a,
@@ -41,6 +44,6 @@ export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down')
             x: newx,
             y: newx * s.k + s.d 
         }
-    }
-    return seg(nseg.a,nseg.b);
+    } 
+    return { seg: seg(nseg.a ,nseg.b), dx: dx/2};
 }

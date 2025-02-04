@@ -47,8 +47,8 @@ const limitchecker = new LineIntersectingLimitChecker({
   }
 })
 
-console.log('limit ok',limitchecker.isValueWithinLimits({x: 7, y: 4}))
-console.log('limit mov not ok',limitchecker.isValueWithinLimits(mov.b))
+// console.log('limit ok',limitchecker.isValueWithinLimits({x: 7, y: 4}))
+// console.log('limit mov not ok',limitchecker.isValueWithinLimits(mov.b))
 
 const meta = findMeta('dragline',chart);
 
@@ -69,17 +69,20 @@ let lastLen = Number.MAX_SAFE_INTEGER;
 let limitCheckResult = limitchecker.isValueWithinLimits( convertPointFromPx(lineSegPx.b));
 let done = Math.abs(lastLen-segLenPx) <= 1 || limitCheckResult.inLimits ; 
 let iter = 0;
+let lastDx: number|undefined;
 while(!done) {
   
-  debugger;
+  // debugger;
   
-
+ 
   iter++;
   //  console.log('ss',s,l) 
-  lineSegPx = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down');
+  const halved = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down', lastDx);
+  lineSegPx = halved.seg;
+  lastDx = halved.dx;
   lastLen = segLenPx;
   segLenPx = len(lineSegPx);
-  console.log(`Updated drag lineSeg len=${segLenPx}`,lineSegPx,Math.abs(lastLen-segLenPx))
+  console.log(`Updated drag lineSeg len=${segLenPx}`,lineSegPx, lastDx)
 
   const corrEndpoint = updateDrag(lineSegPx)
   updateMoved(corrEndpoint);
@@ -87,7 +90,7 @@ while(!done) {
   console.log(`Corr endpoint:`,corrEndpoint, limitCheckResult.inLimits);
    
   // TODO: berechner Differenz der Längen von letzten inLimit und notInLimit - die muss min sein
-  done  = Math.abs(lastLen-segLenPx) <=1 || iter  >=100;
+  done  = lastDx <=1 || iter  >=100;
 
   chart.update();
 }
