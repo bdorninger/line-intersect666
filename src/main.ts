@@ -1,3 +1,4 @@
+import { Point } from 'chart.js';
 import { findData, findMeta, findPoint, initChart } from './chart-util';
 import { LineSegment } from './data-point-util';
 import { LineIntersectingLimitChecker } from './limit-checker';
@@ -56,15 +57,17 @@ const pxseg = seg(
   {x: meta!.data[1].x, y:chart.scales.y.height + chart.chartArea.top - meta!.data[1].y} 
 )
 
-let pxseglen = len(pxseg);
 
-console.log('XXXX',chart,meta, pxseg,pxseglen);
+
+console.log('XXXX',chart,meta, pxseg,len(pxseg));
 
 console.log('lines',meta!.data[1].y, pxseg.b.y, chart.scales.y.height)
 
-let s = pxseg;
-let l = len(s);
-let done = pxseglen <= 1; // || limitchecker.isValueWithinLimits() ;
+let lineSegPx = pxseg;
+let segLenPx = len(lineSegPx);
+let lastLen = Number.MAX_SAFE_INTEGER;
+let limitCheckResult = limitchecker.isValueWithinLimits( convertPointFromPx(lineSegPx.b));
+let done = Math.abs(lastLen-segLenPx) <= 1 || limitCheckResult.inLimits ; 
 let iter = 0;
 while(!done) {
   
@@ -72,18 +75,28 @@ while(!done) {
   
 
   iter++;
-  // console.log('ss',s,l)
-  s = half(s,'down');
-  l = len(s);
+  //  console.log('ss',s,l) 
+  lineSegPx = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down');
+  lastLen = segLenPx;
+  segLenPx = len(lineSegPx);
+  console.log(`Updated drag lineSeg len=${segLenPx}`,lineSegPx,Math.abs(lastLen-segLenPx))
 
-  updateDrag(s)
-  
-  done  = len(s) <=1 || iter  >=100;
+  const corrEndpoint = updateDrag(lineSegPx)
+  updateMoved(corrEndpoint);
+  limitCheckResult = limitchecker.isValueWithinLimits( corrEndpoint);
+  console.log(`Corr endpoint:`,corrEndpoint, limitCheckResult.inLimits);
+   
+  // TODO: berechner Differenz der Längen von letzten inLimit und notInLimit - die muss min sein
+  done  = Math.abs(lastLen-segLenPx) <=1 || iter  >=100;
 
+  chart.update();
 }
 
-console.log(`Done in ${iter} iterations`,s, l)
+console.log(`Done in ${iter} iterations`,lineSegPx, segLenPx, limitCheckResult.inLimits)
 
+function updateMoved(p: Point) {
+  chart.data.datasets[1].data[2] = p;
+}
 
 function updateDrag(s: LineSegment ) {
   const drl = findData('dragline',chart);
@@ -91,8 +104,15 @@ function updateDrag(s: LineSegment ) {
   const to = { x: chart.scales['x'].getValueForPixel(s.b.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.b.y)?? 0}
   // console.log("data",from,to)
   drl!.data = [from,to];
-  drl!.pointRadius = 5
-  chart.update();
+  drl!.pointRadius = 5  
+  return {
+    x: to.x,
+    y: to.y
+  }
 
+}
+
+function convertPointFromPx(ppx: Point) : Point {
+  return { x: chart.scales['x'].getValueForPixel(ppx.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - ppx.y)?? 0};
 }
 

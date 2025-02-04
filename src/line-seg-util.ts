@@ -29,16 +29,17 @@ export function len(s: LineSegment): number {
 }
 
 export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down'): LineSegment & { k: number, d: number} {
+    console.log(`half: k: ${s.k}, d: ${s.d}`, s.b.x*s.k)
     const dx = s.b.x - s.a.x;
-    const dy = s.b.y - s.a.y;
+    // const dy = s.b.y - s.a.y;
     
-    // Sonderfälle: k is neg, k is INF, k = 0
-
+    // Sonderfälle: k is INF
+    const newx = s.b.x + (dir==='down' ? (-dx/2):dx/2);
     const nseg = {
         a: s.a,
         b: {
-            x: s.b.x + (dir==='down' ? (-dx/2):dx/2),
-            y: s.b.y + (dir==='down' ? (-dy/2):(dy/2))
+            x: newx,
+            y: newx * s.k + s.d 
         }
     }
     return seg(nseg.a,nseg.b);
