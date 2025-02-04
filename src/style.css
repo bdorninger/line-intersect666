@@ -11,9 +11,8 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;  
-  min-width: 320px;
-  min-height: 100vh;
+  display: flex;    
+  height: 100vh;
 }
 
 h1 {
@@ -22,7 +21,7 @@ h1 {
 }
 
 #chart-canvas {
-  min-width: 400px;  
+  min-width: 800px;  
 }
 
 #chart-container {
