@@ -43,6 +43,7 @@ const limitchecker = new LineIntersectingLimitChecker({
   datasetIndex: 0,
   elemIndex: 2,
   seriesMeta: {
+    upperLimitSeries: 'limitUp',
     lowerLimitSeries: 'limit'
   }
 })
@@ -64,38 +65,39 @@ console.log('XXXX',chart,meta, pxseg,len(pxseg));
 console.log('lines',meta!.data[1].y, pxseg.b.y, chart.scales.y.height)
 
 let lineSegPx = pxseg;
-let segLenPx = len(lineSegPx);
-let lastLen = Number.MAX_SAFE_INTEGER;
+// let segLenPx = len(lineSegPx);
+// let lastLen = Number.MAX_SAFE_INTEGER;
 let limitCheckResult = limitchecker.isValueWithinLimits( convertPointFromPx(lineSegPx.b));
-let done = Math.abs(lastLen-segLenPx) <= 1 || limitCheckResult.inLimits ; 
+let done = limitCheckResult.inLimits ; 
 let iter = 0;
 let lastDx: number|undefined;
+let lastDy: number|undefined;
 while(!done) {
   
-  // debugger;
+  debugger;
   
  
   iter++;
-  //  console.log('ss',s,l) 
-  const halved = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down', lastDx);
+  // console.log('ss',s,l) 
+  const halved = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down', lastDx, lastDy);
   lineSegPx = halved.seg;
   lastDx = halved.dx;
-  lastLen = segLenPx;
-  segLenPx = len(lineSegPx);
-  console.log(`Updated drag lineSeg len=${segLenPx}`,lineSegPx, lastDx)
+  lastDy = halved.dy;
+  // lastLen = segLenPx;
+  // segLenPx = len(lineSegPx);
+  // console.log(`Updated drag lineSeg len=${segLenPx}`,lineSegPx, lastDx)
 
   const corrEndpoint = updateDrag(lineSegPx)
   updateMoved(corrEndpoint);
   limitCheckResult = limitchecker.isValueWithinLimits( corrEndpoint);
-  console.log(`Corr endpoint:`,corrEndpoint, limitCheckResult.inLimits);
+  console.log(`Corr endpoint:`,corrEndpoint, limitCheckResult.inLimits, lastDx, lastDy);
    
   // TODO: berechner Differenz der Längen von letzten inLimit und notInLimit - die muss min sein
-  done  = lastDx <=1 || iter  >=100;
-
+  done  = (limitCheckResult.inLimits && Math.abs(lastDx) <=1 && Math.abs(lastDy)<=1) || iter  >= 100; // emergency exit, if we do not converge
   chart.update();
 }
 
-console.log(`Done in ${iter} iterations`,lineSegPx, segLenPx, limitCheckResult.inLimits)
+console.log(`Done in ${iter} iterations`,lineSegPx, limitCheckResult.inLimits)
 
 function updateMoved(p: Point) {
   chart.data.datasets[1].data[2] = p;

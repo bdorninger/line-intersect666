@@ -12,9 +12,16 @@ export let limit: ChartDataset<'line'> = {
     pointRadius: 0
   }
 
+  export let limitUp: ChartDataset<'line'> = {
+    label: "limitUp",
+    data: [{x: 1, y: 12},{x:5,y:14},{x:5,y:18}, {x: 10, y: 16}],
+    pointBorderWidth:0,
+    pointRadius: 0
+  }
+
   export let intersecting: ChartDataset<'line'> =  {
     label: "moved",
-    data: [{x: 1, y: 2}, {x: 3.5, y: 7}, {x: 5.7, y: 0},{x: 8, y: 6},{x: 10, y: 14.5}],
+    data: [{x: 1, y: 2}, {x: 3.5, y: 7}, {x:  5.8, y: 0},{x: 8, y: 6},{x: 10, y: 14.5}], 
     borderWidth:2,
     borderDash: [3,3]
   }
@@ -40,7 +47,7 @@ export function initChart(ctx: CanvasRenderingContext2D): Chart<'line'> {
           },*/
         data: {
           datasets: [
-          curve,intersecting,limit,dragline
+          curve,intersecting,limit,limitUp,dragline
         ],
         },
         // plugins: plugins,

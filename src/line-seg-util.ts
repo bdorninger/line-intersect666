@@ -28,22 +28,20 @@ export function len(s: LineSegment): number {
     }
 }
 
-export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down', lastdx?: number): { seg: LineSegment & { k: number, d: number}, dx: number } {
-    console.log(`half: k: ${s.k}, d: ${s.d}`, s.b.x*s.k)
-    const dx = lastdx ? lastdx : s.b.x - s.a.x;
-    // const dy = s.b.y - s.a.y;
+export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down', lastdx?: number, lastdy?:number): { seg: LineSegment & { k: number, d: number}, dx: number, dy: number } {
+    // console.log(`half: k: ${s.k}, d: ${s.d}`, s.b.x*s.k)
+    let dx = lastdx ?? (s.b.x - s.a.x);
+    let dy = lastdy ?? (s.b.y - s.a.y);    /// y computed by applying k and d except if we have a vert line   
     
-    // TODO: special case k is INF, i.e. vertical line of drag
-    // iterative: directly manipulate sby!
-    // exact: would need limit curve's lin seg that goes thru sbx.
 
-    const newx = s.b.x + (dir==='down' ? (-dx/2):dx/2);
+    const newx = s.k===Number.POSITIVE_INFINITY ? s.b.x : s.b.x + (dir==='down' ? (-dx/2):dx/2);
+    const newy = s.k===Number.POSITIVE_INFINITY ? s.b.y + (dir==='down' ? (-dy/2):(dy/2)) : newx * s.k + s.d;
     const nseg = {
         a: s.a,
         b: {
             x: newx,
-            y: newx * s.k + s.d 
+            y: newy
         }
     } 
-    return { seg: seg(nseg.a ,nseg.b), dx: dx/2};
+    return { seg: seg(nseg.a ,nseg.b), dx: dx/2, dy: dy/2};
 }
