@@ -5,6 +5,8 @@ import {
   intersectionPoint,
   LineSegment,
 } from './data-point-util';
+import { half, seg } from './line-seg-util';
+import { findData } from './chart-util';
 
 
 /**
@@ -269,4 +271,64 @@ export class LineIntersectingLimitChecker implements LimitChecker {
     }
     return -1;
   }
+
+  public computeSuggested(startPx: Point, endPx: Point, providedLimitCheckResult: LimitCheckResult) {
+
+  let limitCheckResult = providedLimitCheckResult;
+  let lineSegPx = seg(startPx,endPx);
+  let done = false;
+  let iter = 0;
+  let lastDx: number|undefined;
+  let lastDy: number|undefined;
+  let correctedPosition = providedLimitCheckResult.correctedPosition;
+
+  while(!done) {  
+    debugger;
+    iter++;
+  
+    const halved = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down', lastDx, lastDy);
+    lineSegPx = halved.seg;
+    lastDx = halved.dx;
+    lastDy = halved.dy;
+  
+    const draglineSeg = this.computeScaleValues(lineSegPx);
+    // updateMoved(corrEndpoint);
+    correctedPosition = draglineSeg.to;
+    limitCheckResult = this.isValueWithinLimits(correctedPosition);
+
+    // this.updateVisuals(draglineSeg.from,correctedPosition);        
+    console.log(`Corr endpoint:`,correctedPosition, limitCheckResult.inLimits, lastDx, lastDy);
+   
+    // TODO: berechner Differenz der Längen von letzten inLimit und notInLimit - die muss min sein
+    done  = (limitCheckResult.inLimits && Math.abs(lastDx) <=1 && Math.abs(lastDy)<=1) || iter  >= 100; // emergency exit, if we do not converge
+    // chart.update();
+  }
+
+  console.log(`Done in ${iter} iterations`,lineSegPx, limitCheckResult.inLimits)
+  return correctedPosition;
 }
+
+  private computeScaleValues(s:LineSegment) {
+    const chart = this.options.chart;
+    const from = { x: chart.scales['x'].getValueForPixel(s.a.x)?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.a.y)?? 0}
+    const to = { x: chart.scales['x'].getValueForPixel(s.b.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.b.y)?? 0}
+    return {
+      from,
+      to
+    }
+  }  
+
+  // DO NOT USE THAT IN CC4
+  private updateVisuals(from: Point, to: Point) {    
+    // this.options.chart.data.datasets[this.options.datasetIndex].data[this.options.elemIndex] = to;
+    this.options.chart.data.datasets[this.options.datasetIndex+1].data[this.options.elemIndex] = to;
+    const drl = findData('dragline',this.options.chart as Chart<'line'>);
+    drl!.data = [from,to];
+    drl!.pointRadius = 5  
+    this.options.chart.update();
+  }
+}
+
+
+
+

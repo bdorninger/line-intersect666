@@ -1,6 +1,6 @@
 import { Point } from 'chart.js';
 import { findData, findMeta, findPoint, initChart } from './chart-util';
-import { LineSegment } from './data-point-util';
+import { LineSegment, convertPointFromPx } from './data-point-util';
 import { LineIntersectingLimitChecker } from './limit-checker';
 import { half, len, seg } from './line-seg-util';
 import './style.css'
@@ -57,67 +57,19 @@ const pxseg = seg(
   {x: meta!.data[0].x, y:chart.scales.y.height + chart.chartArea.top - meta!.data[0].y},
   {x: meta!.data[1].x, y:chart.scales.y.height + chart.chartArea.top - meta!.data[1].y} 
 )
-
-
-
-console.log('XXXX',chart,meta, pxseg,len(pxseg));
-
-console.log('lines',meta!.data[1].y, pxseg.b.y, chart.scales.y.height)
-
 let lineSegPx = pxseg;
-// let segLenPx = len(lineSegPx);
-// let lastLen = Number.MAX_SAFE_INTEGER;
-let limitCheckResult = limitchecker.isValueWithinLimits( convertPointFromPx(lineSegPx.b));
-let done = limitCheckResult.inLimits ; 
-let iter = 0;
-let lastDx: number|undefined;
-let lastDy: number|undefined;
-while(!done) {
-  
-  debugger;
-  
- 
-  iter++;
-  // console.log('ss',s,l) 
-  const halved = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down', lastDx, lastDy);
-  lineSegPx = halved.seg;
-  lastDx = halved.dx;
-  lastDy = halved.dy;
-  // lastLen = segLenPx;
-  // segLenPx = len(lineSegPx);
-  // console.log(`Updated drag lineSeg len=${segLenPx}`,lineSegPx, lastDx)
 
-  const corrEndpoint = updateDrag(lineSegPx)
-  updateMoved(corrEndpoint);
-  limitCheckResult = limitchecker.isValueWithinLimits( corrEndpoint);
-  console.log(`Corr endpoint:`,corrEndpoint, limitCheckResult.inLimits, lastDx, lastDy);
-   
-  // TODO: berechner Differenz der Längen von letzten inLimit und notInLimit - die muss min sein
-  done  = (limitCheckResult.inLimits && Math.abs(lastDx) <=1 && Math.abs(lastDy)<=1) || iter  >= 100; // emergency exit, if we do not converge
-  chart.update();
-}
+const t=performance.now()
+let limitCheckResult = limitchecker.isValueWithinLimits( convertPointFromPx(chart,lineSegPx.b));
 
-console.log(`Done in ${iter} iterations`,lineSegPx, limitCheckResult.inLimits)
+const ts=performance.now()
+const corr = limitchecker.computeSuggested(pxseg.a, pxseg.b, limitCheckResult);
+const te=performance.now()
 
-function updateMoved(p: Point) {
-  chart.data.datasets[1].data[2] = p;
-}
+console.log(`---- CORR POS ----`, corr,ts - t, te-ts)
 
-function updateDrag(s: LineSegment ) {
-  const drl = findData('dragline',chart);
-  const from = { x: chart.scales['x'].getValueForPixel(s.a.x)?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.a.y)?? 0}
-  const to = { x: chart.scales['x'].getValueForPixel(s.b.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.b.y)?? 0}
-  // console.log("data",from,to)
-  drl!.data = [from,to];
-  drl!.pointRadius = 5  
-  return {
-    x: to.x,
-    y: to.y
-  }
 
-}
 
-function convertPointFromPx(ppx: Point) : Point {
-  return { x: chart.scales['x'].getValueForPixel(ppx.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - ppx.y)?? 0};
-}
+
+
 

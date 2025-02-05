@@ -1,5 +1,5 @@
 // the two-char eq (==) / ineq (!=) ops in this file are for a purpose!!
-import { Point } from 'chart.js';
+import { Chart, Point } from 'chart.js';
 
 export interface PointLimits {
   min: number;
@@ -9,6 +9,10 @@ export interface PointLimits {
 export interface LineSegment {
   a: Point;
   b: Point;
+}
+
+export function convertPointFromPx(chart: Chart, ppx: Point) : Point {
+  return { x: chart.scales['x'].getValueForPixel(ppx.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - ppx.y)?? 0};
 }
 
 /**
