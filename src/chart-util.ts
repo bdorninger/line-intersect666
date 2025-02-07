@@ -21,7 +21,7 @@ export let limit: ChartDataset<'line'> = {
 
   export let intersecting: ChartDataset<'line'> =  {
     label: "moved",
-    data: [{x: 1, y: 2}, {x: 3.5, y: 7}, {x:  7.8, y: 0},{x: 8, y: 6},{x: 10, y: 14.5}], 
+    data: [{x: 1, y: 2}, {x: 3.5, y: 7}, {x:  3.9, y: 3},{x: 8, y: 6},{x: 10, y: 14.5}], 
     borderWidth:2,
     borderDash: [3,3]
   }

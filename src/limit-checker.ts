@@ -296,7 +296,7 @@ export class LineIntersectingLimitChecker implements LimitChecker {
     correctedPosition = draglineSeg.to;
     limitCheckResult = this.isValueWithinLimits(correctedPosition);
 
-    // this.updateVisuals(draglineSeg.from,correctedPosition);        
+    this.updateVisuals(draglineSeg.from,correctedPosition);        
     console.log(`Corr endpoint:`,correctedPosition, limitCheckResult.inLimits, lastDx, lastDy);
    
     // TODO: berechner Differenz der Längen von letzten inLimit und notInLimit - die muss min sein
@@ -310,8 +310,12 @@ export class LineIntersectingLimitChecker implements LimitChecker {
 
   private computeScaleValues(s:LineSegment) {
     const chart = this.options.chart;
-    const from = { x: chart.scales['x'].getValueForPixel(s.a.x)?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.a.y)?? 0}
-    const to = { x: chart.scales['x'].getValueForPixel(s.b.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.b.y)?? 0}
+    const from = { x: chart.scales['x'].getValueForPixel(s.a.x)?? 0,
+     // y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.a.y)?? 0}
+     y: chart.scales['y'].getValueForPixel(s.a.y)?? 0}
+    const to = { x: chart.scales['x'].getValueForPixel(s.b.x) ?? 0, 
+      y: chart.scales['y'].getValueForPixel(s.b.y)?? 0}
+      // y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - s.b.y)?? 0}
     return {
       from,
       to

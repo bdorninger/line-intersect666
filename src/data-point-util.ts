@@ -12,7 +12,10 @@ export interface LineSegment {
 }
 
 export function convertPointFromPx(chart: Chart, ppx: Point) : Point {
-  return { x: chart.scales['x'].getValueForPixel(ppx.x) ?? 0, y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - ppx.y)?? 0};
+  return { x: chart.scales['x'].getValueForPixel(ppx.x) ?? 0, 
+           y: chart.scales['y'].getValueForPixel(ppx.y)?? 0
+          }
+  // y: chart.scales['y'].getValueForPixel(chart.scales.y.height + chart.chartArea.top - ppx.y)?? 0};
 }
 
 /**

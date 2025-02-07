@@ -52,11 +52,18 @@ const limitchecker = new LineIntersectingLimitChecker({
 // console.log('limit mov not ok',limitchecker.isValueWithinLimits(mov.b))
 
 const meta = findMeta('dragline',chart);
+const dataset = findData('dragline',chart);
 
 const pxseg = seg(
-  {x: meta!.data[0].x, y:chart.scales.y.height + chart.chartArea.top - meta!.data[0].y},
-  {x: meta!.data[1].x, y:chart.scales.y.height + chart.chartArea.top - meta!.data[1].y} 
+  {x: meta!.data[0].x, y:meta!.data[0].y}, // y:chart.scales.y.height + chart.chartArea.top - meta!.data[0].y},
+  {x: meta!.data[1].x, y: meta!.data[1].y}// y:chart.scales.y.height + chart.chartArea.top - meta!.data[1].y} 
 )
+const pxstartx = chart.scales.x.getPixelForValue((dataset!.data[0]! as Point).x);
+const pxstarty = chart.scales.y.getPixelForValue((dataset!.data[0]! as Point).y) ;
+
+
+console.log("drag starts", pxseg.a.x, pxseg.a.y, pxstartx,pxstarty )
+
 let lineSegPx = pxseg;
 
 const t=performance.now()
