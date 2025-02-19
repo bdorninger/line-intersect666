@@ -33,12 +33,12 @@ const curveSegStart = 2
 const s1 = findPoint('curve',curveSegStart,chart);
 const s2 = findPoint('curve',curveSegStart+1,chart); 
 const seg = lineSegment(s1,s2)
-const limsegStart=5; 
+const limsegStart=3; 
 const l1=findPoint('limitUp2',limsegStart,chart);
 const l2 = findPoint('limitUp2',limsegStart+1,chart);
 const lim = lineSegment(l1,l2)
 
-const pointToProcess: 'start'|'end' = 'end'
+const pointToProcess: 'start'|'end' = 'start'
 const result = range(seg,pointToProcess, "x", lim);
 
 console.log('RESULT',result)
@@ -63,7 +63,7 @@ if(isec!=null) {
 console.log('valid',validProjections) 
 
 
-/* chart.data.datasets.push({ 
+ /* chart.data.datasets.push({ 
   label: "start",
   data: [result.rays[0].a,result.rays[0].b]
 })*/
@@ -76,13 +76,13 @@ console.log('valid',validProjections)
   borderDash: [3,3] 
 })*/
 
-/*chart.data.datasets.push({
+/* chart.data.datasets.push({
   label: "end",
   data: [result.rays[2].a,result.rays[2].b]
 })*/
 
 validProjections.forEach((seg,i) => {
-  chart.data.datasets.push({
+  chart.data.datasets.push({ 
     label: `projection:${i}`,
     data: [seg.a,seg.b],
     borderColor: i===0 ? '#00CC00' : (i%2===0 ? '#CC0000':'#FF00CC'),
@@ -91,14 +91,14 @@ validProjections.forEach((seg,i) => {
   })  
 })
 
-/* chart.data.datasets.push({
+ /* chart.data.datasets.push({
   label: "projstart",
   data: [result.projected[0].a,result.projected[0].b], 
   borderColor: '#00CC00',
   borderDash: [4,4]
 })*/
-/*
-chart.data.datasets.push({
+
+/*chart.data.datasets.push({
   label: "projend",
   data: [result.projected[1].a,result.projected[1].b],
   borderColor: '#00CCcc',

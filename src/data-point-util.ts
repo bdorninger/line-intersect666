@@ -182,7 +182,18 @@ function xor(a: boolean, b: boolean) {
 }
 
 // default precision for line intersection computation
-const PRECISION = 5;
+const PRECISION = 7;
+
+function toPrec(n: number, precision: number): number {
+  return precision >=0 ? Number(n.toFixed(precision)):n;
+}
+
+function toPrecPt(p: Point, precision: number): Point {
+  return {
+    x: toPrec(p.x,precision),
+    y: toPrec(p.y,precision)
+  }
+}
 
 /**
  * compute intersection point of two given line segments
@@ -191,12 +202,12 @@ const PRECISION = 5;
 export function intersectionPoint(
   l1: LineSegment & Partial<LinearFunc>,
   l2: LineSegment & Partial<LinearFunc>,
-  precision = -1,
+  precision = PRECISION,
 ): (Point & { meta?: string }) | undefined {
-  const p1 = l1.a// l1.a.x <= l1.b.x ? l1.a : l1.b;
-  const p2 = l1.b//l1.a.x <= l1.b.x ? l1.b : l1.a;
-  const p3 = l2.a//l2.a.x <= l2.b.x ? l2.a : l2.b;
-  const p4 = l2.b//l2.a.x <= l2.b.x ? l2.b : l2.a;
+  const p1 = toPrecPt(l1.a,precision)// l1.a.x <= l1.b.x ? l1.a : l1.b;
+  const p2 = toPrecPt(l1.b,precision)//l1.a.x <= l1.b.x ? l1.b : l1.a;
+  const p3 = toPrecPt(l2.a,precision)//l2.a.x <= l2.b.x ? l2.a : l2.b;
+  const p4 = toPrecPt(l2.b,precision)//l2.a.x <= l2.b.x ? l2.b : l2.a;
 
   // compute slopes
   let m1 = l1.k!=null ? l1.k:(p2.y - p1.y) / (p2.x - p1.x);
@@ -228,6 +239,7 @@ export function intersectionPoint(
   let x: number;
   if (xor(!Number.isFinite(m1), !Number.isFinite(m2))) {
     x = m1 === Infinity ? p1.x : p3.x;
+    
   } else {
     x = (d2 - d1) / (m1 - m2);
   }
