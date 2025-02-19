@@ -1,38 +1,61 @@
 import Chart, { ChartDataset, Point } from 'chart.js/auto';
 
-export let curve =  {
+export let curve:ChartDataset<'line'> =  {
     label: "curve",
-    data: [{x: 1, y: 2}, {x: 3.5, y: 7}, {x: 5, y: 7},{x: 8, y: 6},{x: 10, y: 14.5}]
+    data: [ {x: 2, y: 7},{x: 5, y: 4}, {x: 7, y: 9},{x: 10, y: 4}],
+    hoverBorderCapStyle: 'square',
+    pointHoverBorderColor: 'red',
+    pointHoverRadius: 5
+        
   }
 
-export let limit: ChartDataset<'line'> = {
-    label: "limit",
+  export let limit1: ChartDataset<'line'> = {
+    label: "limitUp",
+    data: [{x: 1, y: 15},{x:4,y:8},{x:6.5,y:12}, {x: 10, y: 8}],
+    pointBorderWidth:0,
+    pointRadius: 0,
+    borderWidth:2,
+    showLine: false
+  }
+
+  export let limit2: ChartDataset<'line'> = {
+    label: "limitUp2",
+    data: [{x: 1, y: 8},{x:4,y:14},{x:6.5,y:8.5}, {x: 6.5, y: 10},{x: 8.5,y:10},{x: 10, y: 8}],
+    borderWidth:2,
+    pointBorderWidth:0,
+    pointRadius: 0,
+    showLine: true
+  }
+
+  /*export let limit: ChartDataset<'line'> = {
+    label: "limitLo",
     data: [{x: 1, y: 1},{x:4,y:6.5},{x:4.7,y:2}, {x: 10, y: 6}],
     pointBorderWidth:0,
     pointRadius: 0
-  }
+  }*/
 
-  export let limitUp: ChartDataset<'line'> = {
+  /* export let limitUp: ChartDataset<'line'> = {
     label: "limitUp",
     data: [{x: 1, y: 12},{x:5,y:14},{x:5,y:18}, {x: 10, y: 16}],
     pointBorderWidth:0,
     pointRadius: 0
-  }
+  }*/
 
-  export let intersecting: ChartDataset<'line'> =  {
+  /*export let intersecting: ChartDataset<'line'> =  {
     label: "moved",
     data: [{x: 1, y: 2}, {x: 3.5, y: 7}, {x:  3.9, y: 3},{x: 8, y: 6},{x: 10, y: 14.5}], 
     borderWidth:2,
     borderDash: [3,3]
-  }
+  }*/
 
-export let dragline: ChartDataset<'line'> = {
+  /* export let dragline: ChartDataset<'line'> = {
     label: "dragline",
     data: [],
     borderWidth:4,
     borderDash: [3,3],
     pointRadius: 0
-}
+  
+  }*/
 
 
 
@@ -47,7 +70,7 @@ export function initChart(ctx: CanvasRenderingContext2D): Chart<'line'> {
           },*/
         data: {
           datasets: [
-          curve,intersecting,limit,limitUp,dragline
+          curve,limit1,limit2
         ],
         },
         // plugins: plugins,

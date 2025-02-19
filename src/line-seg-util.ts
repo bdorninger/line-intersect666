@@ -115,7 +115,7 @@ export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment 
     point: 'start' | 'end',
     direction: 'x' | 'y',
     limit: LineSegment,
-  ): [number, number] {
+  ) {
     // create line segments
     const movingPoint = point === 'start' ? line.a : line.b;
     const stationaryPoint = point === 'start' ? line.b : line.a;
@@ -139,19 +139,43 @@ export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment 
     // create rays
     const rayStart = lineSegment(stationaryPoint, lim.a);
     const rayEnd = lineSegment(stationaryPoint, lim.b);
-    // const rayMid = lineSegment(stationaryPoint, movedIntersectsLimitPoint);
+    const rayMid = lineSegment(stationaryPoint, movedIntersectsLimitPoint);
   
+    let projStart:Point
+    let projEnd: Point
     if (direction === 'x') {
       const xStart = computeProjectedPointX(rayStart, movingPoint);
       const xEnd = computeProjectedPointX(rayEnd, movingPoint);
       const xMid = movedIntersectsLimitPoint.x;
+      projStart = {
+        x: xStart,
+        y: movingPoint.y
+      }
+      projEnd = {
+        x: xEnd,
+        y: movingPoint.y
+      }
     } else {
       const yStart = computeProjectedPointY(rayStart, movingPoint);
       const yEnd = computeProjectedPointY(rayEnd, movingPoint);
       const yMid = movedIntersectsLimitPoint.y;
+      projStart = {
+        x: movingPoint.x,
+        y: yStart
+      }
+      projEnd = {
+        x: movingPoint.x,
+        y: yEnd
+      }
     }
+
+
   
-    return [0, 0];
+    return { rays: [rayStart,rayMid, rayEnd],
+      projected: [lineSegment(stationaryPoint,projStart),lineSegment(stationaryPoint,projEnd)],
+      distStat: distStatPt,
+      distMoved: distMovPt
+      };
   }
   
   function computeProjectedPointY(
