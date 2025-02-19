@@ -1,7 +1,7 @@
 import { Point } from "chart.js";
-import { LineSegment } from "./data-point-util";
+import { LineSegment, LinearFunc } from "./data-point-util";
 
-export function seg(from: Point, to: Point): LineSegment & { k: number, d: number} {
+/* export function seg(from: Point, to: Point): LineSegment & { k: number, d: number} {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
 
@@ -14,7 +14,18 @@ export function seg(from: Point, to: Point): LineSegment & { k: number, d: numbe
         k: k,
         d: d
     }
-}
+}*/
+
+/**
+ * Constructs a line segment from two points
+ * @param from the starting point
+ * @param to the end point
+ * @returns the segment
+ */
+export function lineSegment(from: Point, to: Point): LineSegment & LinearFunc {
+    return linear({ a: from, b: to });
+  }
+  
 
 export function len(s: LineSegment): number {
     const dx = Math.abs(s.b.x - s.a.x);
@@ -34,8 +45,8 @@ export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down',
     let dy = lastdy ?? (s.b.y - s.a.y);    /// y computed by applying k and d except if we have a vert line   
     
 
-    const newx = s.k===Number.POSITIVE_INFINITY ? s.b.x : s.b.x + (dir==='down' ? (-dx/2):dx/2);
-    const newy = s.k===Number.POSITIVE_INFINITY ? s.b.y + (dir==='down' ? (-dy/2):(dy/2)) : newx * s.k + s.d;
+    const newx = !Number.isFinite(s.k) ? s.b.x : s.b.x + (dir==='down' ? (-dx/2):dx/2);
+    const newy = !Number.isFinite(s.k) ? s.b.y + (dir==='down' ? (-dy/2):(dy/2)) : newx * s.k + s.d;
     const nseg = {
         a: s.a,
         b: {
@@ -43,5 +54,133 @@ export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down',
             y: newy
         }
     } 
-    return { seg: seg(nseg.a ,nseg.b), dx: dx/2, dy: dy/2};
+    return { seg: lineSegment(nseg.a ,nseg.b), dx: dx/2, dy: dy/2};
 }
+
+
+/**
+ * Computes the linear function properties k and d from a specified line segment
+ * @param s the line segment, will be sorted by x coordinates!!
+ * @param sortX when true, sorts the points by x coordinates. default true.
+ * @returns the possibly modified segment plus the computed values for k and d
+ */
+export function linear(s: LineSegment, sortX = true): LinearFunc & LineSegment {
+    /*if (s.a.x > s.b.x && sortX) {
+      s = {
+        a: s.b,
+        b: s.a,
+      };
+    }*/
+    const k = (s.b.y - s.a.y) / (s.b.x - s.a.x);
+    const d = k == 0 ? s.a.y : s.a.y - k * s.a.x; // k=Inf > d=NaN
+    return {
+      k: k,
+      d: d,
+      ...s,
+    };
+  }
+  
+  /**
+   * Computes the perpendicular distance of a point to a line
+   * @param s the line segment
+   * @param p the point
+   * @returns the distance of p to s. negative, if p is "left" of line other wise positive
+   */
+  export function dist(s: LineSegment, p: Point): number {
+    const lf = linear(s);
+    let dist = 0;
+    if (!Number.isFinite(lf.k)) {
+      dist = p.x - s.a.x;
+    } else if (lf.k === 0) {
+      dist = p.y - s.a.y;
+    } else {
+      const fpy = lf.k * p.x + lf.d;
+      const fpx = (p.y - lf.d) / lf.k;
+      const ly = p.y - fpy;
+      const lx = p.x - fpx;
+      const sign = lx < 0 && ly < 0 ? -1 : 1;
+      const hc = Math.sqrt(1 / (1 / Math.pow(lx, 2) + 1 / Math.pow(ly, 2)));
+      dist = hc * sign;
+    }
+    return dist;
+  }
+  
+  /**
+   * Compute range of movement of a line's point against a specifed limit line. line and limit MUST not intersect!
+   * Make sure, the lines have their points in the correct x-order
+   */
+  export function range(
+    line: LineSegment,
+    point: 'start' | 'end',
+    direction: 'x' | 'y',
+    limit: LineSegment,
+  ): [number, number] {
+    // create line segments
+    const movingPoint = point === 'start' ? line.a : line.b;
+    const stationaryPoint = point === 'start' ? line.b : line.a;
+  
+    const lim = linear(limit, false); // assume sorted
+  
+    const movedIntersectsLimitPoint =
+      direction === 'x'
+        ? {
+            x: computeProjectedPointX(lim, movingPoint),
+            y: movingPoint.y,
+          }
+        : {
+            x: movingPoint.x,
+            y: computeProjectedPointY(lim, movingPoint),
+          };
+  
+    const distStatPt = dist(lim, stationaryPoint);
+    const distMovPt = dist(lim, movingPoint);
+  
+    // create rays
+    const rayStart = lineSegment(stationaryPoint, lim.a);
+    const rayEnd = lineSegment(stationaryPoint, lim.b);
+    // const rayMid = lineSegment(stationaryPoint, movedIntersectsLimitPoint);
+  
+    if (direction === 'x') {
+      const xStart = computeProjectedPointX(rayStart, movingPoint);
+      const xEnd = computeProjectedPointX(rayEnd, movingPoint);
+      const xMid = movedIntersectsLimitPoint.x;
+    } else {
+      const yStart = computeProjectedPointY(rayStart, movingPoint);
+      const yEnd = computeProjectedPointY(rayEnd, movingPoint);
+      const yMid = movedIntersectsLimitPoint.y;
+    }
+  
+    return [0, 0];
+  }
+  
+  function computeProjectedPointY(
+    line: LineSegment & LinearFunc,
+    p: Point,
+  ): number {
+    let y: number;
+  
+    if (!Number.isFinite(line.k)) {
+      y = line.a.y === p.y ? p.y : NaN;
+    } else if (line.k === 0) {
+      y = p.x >= line.a.x && p.x <= line.b.x ? line.a.y : NaN;
+    } else {
+      y = line.k * p.x + line.d;
+    }
+    return y;
+  }
+  
+  function computeProjectedPointX(
+    line: LineSegment & LinearFunc,
+    p: Point,
+  ): number {
+    let x: number;
+    if (!Number.isFinite(line.k)) {
+      x = p.y >= line.a.y && p.y <= line.b.y ? line.a.x : NaN;
+    } else if (line.k === 0) {
+      x = line.a.x === p.x ? p.x : NaN;
+    } else {
+      x = (p.y - line.d) / line.k;
+    }
+    return x;
+  }
+  

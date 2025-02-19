@@ -2,7 +2,7 @@ import { Point } from 'chart.js';
 import { findData, findMeta, findPoint, initChart } from './chart-util';
 import { LineSegment, convertPointFromPx } from './data-point-util';
 import { LineIntersectingLimitChecker } from './limit-checker';
-import { half, len, seg } from './line-seg-util';
+import { half, len, lineSegment } from './line-seg-util';
 import './style.css'
 
 
@@ -29,7 +29,7 @@ const ctx = chartCanvas?.getContext('2d');
 // setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
 const chart = initChart(ctx!);
 //const datasets = chart.data;
-const mov = seg(findPoint('curve',2,chart), findPoint('moved',2,chart))
+const mov = lineSegment(findPoint('curve',2,chart), findPoint('moved',2,chart))
 console.log(mov)
 
 const drl = findData('dragline',chart);
@@ -54,7 +54,7 @@ const limitchecker = new LineIntersectingLimitChecker({
 const meta = findMeta('dragline',chart);
 const dataset = findData('dragline',chart);
 
-const pxseg = seg(
+const pxseg = lineSegment(
   {x: meta!.data[0].x, y:meta!.data[0].y}, // y:chart.scales.y.height + chart.chartArea.top - meta!.data[0].y},
   {x: meta!.data[1].x, y: meta!.data[1].y}// y:chart.scales.y.height + chart.chartArea.top - meta!.data[1].y} 
 )

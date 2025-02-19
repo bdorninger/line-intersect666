@@ -5,7 +5,7 @@ import {
   intersectionPoint,
   LineSegment,
 } from './data-point-util';
-import { half, seg } from './line-seg-util';
+import { half, lineSegment } from './line-seg-util';
 import { findData } from './chart-util';
 
 
@@ -275,7 +275,7 @@ export class LineIntersectingLimitChecker implements LimitChecker {
   public computeSuggested(startPx: Point, endPx: Point, providedLimitCheckResult: LimitCheckResult) {
 
   let limitCheckResult = providedLimitCheckResult;
-  let lineSegPx = seg(startPx,endPx);
+  let lineSegPx = lineSegment(startPx,endPx);
   let done = false;
   let iter = 0;
   let lastDx: number|undefined;

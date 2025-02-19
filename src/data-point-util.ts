@@ -11,6 +11,11 @@ export interface LineSegment {
   b: Point;
 }
 
+export interface LinearFunc {
+  k: number;
+  d: number;
+}
+
 export function convertPointFromPx(chart: Chart, ppx: Point) : Point {
   return { x: chart.scales['x'].getValueForPixel(ppx.x) ?? 0, 
            y: chart.scales['y'].getValueForPixel(ppx.y)?? 0
@@ -198,12 +203,12 @@ export function intersectionPoint(
   let m2 = (p4.y - p3.y) / (p4.x - p3.x);
 
   // vert lines? don't care about direction
-  if (m1 === -Infinity) {
+  /* if (m1 === -Infinity) {
     m1 = Infinity;
   }
   if (m2 === -Infinity) {
     m2 = Infinity;
-  }
+  }*/
 
   const parallel = m1 === m2;
 
