@@ -64,13 +64,14 @@ export function half(s: LineSegment & { k: number, d: number}, dir: 'up'|'down',
  * @param sortX when true, sorts the points by x coordinates. default true.
  * @returns the possibly modified segment plus the computed values for k and d
  */
-export function linear(s: LineSegment, sortX = true): LinearFunc & LineSegment {
-    /*if (s.a.x > s.b.x && sortX) {
+export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment {    
+    if (s.a.x > s.b.x && sortX) {
+        console.log("lin",s.a,s.b);
       s = {
         a: s.b,
         b: s.a,
       };
-    }*/
+    }
     const k = (s.b.y - s.a.y) / (s.b.x - s.a.x);
     const d = k == 0 ? s.a.y : s.a.y - k * s.a.x; // k=Inf > d=NaN
     return {

@@ -283,7 +283,7 @@ export class LineIntersectingLimitChecker implements LimitChecker {
   let correctedPosition = providedLimitCheckResult.correctedPosition;
 
   while(!done) {  
-    debugger;
+    // debugger;
     iter++;
   
     const halved = half(lineSegPx, limitCheckResult.inLimits ? 'up':'down', lastDx, lastDy);
