@@ -2,7 +2,7 @@ import Chart, { ChartDataset, Point } from 'chart.js/auto';
 
 export let curve:ChartDataset<'line'> =  {
     label: "curve",
-    data: [ {x: 2, y: 7},{x: 5, y: 4}, {x: 7, y: 9},{x: 10, y: 4}],
+    data: [ {x: 2, y: 9},{x: 5, y: 4}, {x: 7, y: 9},{x: 10, y: 5}],
     hoverBorderCapStyle: 'square',
     pointHoverBorderColor: 'red',
     pointHoverRadius: 5
@@ -20,7 +20,7 @@ export let curve:ChartDataset<'line'> =  {
 
   export let limit2: ChartDataset<'line'> = {
     label: "limitUp2",
-    data: [{x: 1, y: 8},{x:4,y:14},{x:6.5,y:8.5}, {x: 6.5, y: 10},{x: 8.5,y:10},{x: 10, y: 8}],
+    data: [{x: 1, y: 8},{x:4,y:14},{x:6,y:8.5 },{x:6.5,y:8.5}, {x: 6.5, y: 10},{x: 8.5,y:10},{x: 10, y: 8}],
     borderWidth:2,
     pointBorderWidth:0,
     pointRadius: 0,
@@ -81,18 +81,27 @@ export function initChart(ctx: CanvasRenderingContext2D): Chart<'line'> {
           interaction: {
             mode: 'point',
             intersect: false,
-          },
-          //
+          },          
           scales: {
-            x: {
+            x: { 
                 type: 'linear',
                 min: 0,
-                max: 10,
+                max: 12,
+                ticks: {
+                  maxTicksLimit:15,                  
+                  precision:0
+                },
+                
               },
             y: {
               type: 'linear',
-              min: 0,
+              min: -4,
               max: 20,
+              ticks: {
+                maxTicksLimit:35,                  
+                includeBounds: true,
+                precision:0
+              },
             }
           },
           // onClick: this.onChartClicked.bind(this),

@@ -189,35 +189,28 @@ const PRECISION = 5;
  */
 // eslint-disable-next-line complexity
 export function intersectionPoint(
-  l1: LineSegment,
-  l2: LineSegment,
-  precision = PRECISION,
+  l1: LineSegment & Partial<LinearFunc>,
+  l2: LineSegment & Partial<LinearFunc>,
+  precision = -1,
 ): (Point & { meta?: string }) | undefined {
-  const p1 = l1.a.x <= l1.b.x ? l1.a : l1.b;
-  const p2 = l1.a.x <= l1.b.x ? l1.b : l1.a;
-  const p3 = l2.a.x <= l2.b.x ? l2.a : l2.b;
-  const p4 = l2.a.x <= l2.b.x ? l2.b : l2.a;
+  const p1 = l1.a// l1.a.x <= l1.b.x ? l1.a : l1.b;
+  const p2 = l1.b//l1.a.x <= l1.b.x ? l1.b : l1.a;
+  const p3 = l2.a//l2.a.x <= l2.b.x ? l2.a : l2.b;
+  const p4 = l2.b//l2.a.x <= l2.b.x ? l2.b : l2.a;
 
   // compute slopes
-  let m1 = (p2.y - p1.y) / (p2.x - p1.x);
-  let m2 = (p4.y - p3.y) / (p4.x - p3.x);
-
-  // vert lines? don't care about direction
-  /* if (m1 === -Infinity) {
-    m1 = Infinity;
-  }
-  if (m2 === -Infinity) {
-    m2 = Infinity;
-  }*/
+  let m1 = l1.k!=null ? l1.k:(p2.y - p1.y) / (p2.x - p1.x);
+  let m2 = l2.k!=null ? l2.k: (p4.y - p3.y) / (p4.x - p3.x);
+ 
 
   const parallel = m1 === m2;
 
   // y-Achsenabschnitte berechnen
-  const d1 = p1.y - m1 * p1.x;
-  const d2 = p3.y - m2 * p3.x;
+  const d1 = l1.d!=null ? l1.d : p1.y - m1 * p1.x;
+  const d2 = l2.d!=null ? l2.d : p3.y - m2 * p3.x;
   const coincident =
     parallel &&
-    ((m1 !== Infinity && d1 === d2) ||
+    ((Number.isFinite(m1) && d1 === d2) ||
       (m1 === Infinity &&
         p1.x === p3.x &&
         isOverlapping([p1.y, p2.y], [p3.y, p4.y])));
@@ -233,17 +226,17 @@ export function intersectionPoint(
   // - either m === infinity: x can only be the x of the vertical line
   //                          y then is computed with the other lines m and d
   let x: number;
-  if (xor(m1 === Infinity, m2 === Infinity)) {
+  if (xor(!Number.isFinite(m1), !Number.isFinite(m2))) {
     x = m1 === Infinity ? p1.x : p3.x;
   } else {
     x = (d2 - d1) / (m1 - m2);
   }
 
   // compute y of intersection
-  let y = (m1 === Infinity ? m2 : m1) * x + (m1 === Infinity ? d2 : d1);
+  let y = (Number.isFinite(m1) ? m1 : m2) * x + (Number.isFinite(m1) ? d1 : d2);
 
-  x = Number(x.toFixed(precision));
-  y = Number(y.toFixed(precision));
+  x = precision > 0 ? Number(x.toFixed(precision)):x;
+  y = precision >0 ? Number(y.toFixed(precision)):y;
 
   // is the computed point on both line segs?
   if (coincident) {

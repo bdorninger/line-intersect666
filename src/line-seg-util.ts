@@ -187,7 +187,7 @@ export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment 
     if (!Number.isFinite(line.k)) {
       y = line.a.y === p.y ? p.y : NaN;
     } else if (line.k === 0) {
-      y = p.x >= line.a.x && p.x <= line.b.x ? line.a.y : NaN;
+      y = line.a.y;
     } else {
       y = line.k * p.x + line.d;
     }
@@ -199,8 +199,8 @@ export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment 
     p: Point,
   ): number {
     let x: number;
-    if (!Number.isFinite(line.k)) {
-      x = p.y >= line.a.y && p.y <= line.b.y ? line.a.x : NaN;
+    if (!Number.isFinite(line.k)) {      
+      x = line.a.x;
     } else if (line.k === 0) {
       x = line.a.x === p.x ? p.x : NaN;
     } else {
