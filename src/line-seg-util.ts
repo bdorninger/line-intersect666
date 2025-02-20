@@ -1,21 +1,6 @@
 import { Point } from "chart.js";
 import { LineSegment, LinearFunc } from "./data-point-util";
 
-/* export function seg(from: Point, to: Point): LineSegment & { k: number, d: number} {
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-
-    const k = dx === 0 ? Number.POSITIVE_INFINITY : dy/dx ;
-    const d = k=== Number.POSITIVE_INFINITY ? 0: to.y - to.x*k
-
-    return {
-        a: from,
-        b: to,
-        k: k,
-        d: d
-    }
-}*/
-
 /**
  * Constructs a line segment from two points
  * @param from the starting point
@@ -107,8 +92,8 @@ export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment 
   }
   
   /**
-   * Compute range of movement of a line's point against a specifed limit line. line and limit MUST not intersect!
-   * Make sure, the lines have their points in the correct x-order
+   * Compute range of movement of a line's point against a specifed limit line. 
+   * line and limit MUST not intersect from the beginning!   
    */
   export function range(
     line: LineSegment,
@@ -120,59 +105,50 @@ export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment 
     const movingPoint = point === 'start' ? line.a : line.b;
     const stationaryPoint = point === 'start' ? line.b : line.a;
   
-    const lim = linear(limit, false); // assume sorted
-  
-    const movedIntersectsLimitPoint =
-      direction === 'x'
-        ? {
-            x: computeProjectedPointX(lim, movingPoint),
-            y: movingPoint.y,
-          }
-        : {
-            x: movingPoint.x,
-            y: computeProjectedPointY(lim, movingPoint),
-          };
-  
+    const lim = linear(limit, false);   
+    
     const distStatPt = dist(lim, stationaryPoint);
     const distMovPt = dist(lim, movingPoint);
   
     // create rays
     const rayStart = lineSegment(stationaryPoint, lim.a);
-    const rayEnd = lineSegment(stationaryPoint, lim.b);
-    const rayMid = lineSegment(stationaryPoint, movedIntersectsLimitPoint);
+    const rayEnd = lineSegment(stationaryPoint, lim.b);    
   
-    let projStart:Point
-    let projEnd: Point
+    // create projections, where would the moved point end up?
+    let projStart:Point;
+    let projEnd: Point;
+    let projMove: Point;
     if (direction === 'x') {
-      const xStart = computeProjectedPointX(rayStart, movingPoint);
-      const xEnd = computeProjectedPointX(rayEnd, movingPoint);
-      const xMid = movedIntersectsLimitPoint.x;
       projStart = {
-        x: xStart,
+        x: computeProjectedPointX(rayStart, movingPoint),
         y: movingPoint.y
       }
       projEnd = {
-        x: xEnd,
+        x: computeProjectedPointX(rayEnd, movingPoint),
         y: movingPoint.y
       }
-    } else {
-      const yStart = computeProjectedPointY(rayStart, movingPoint);
-      const yEnd = computeProjectedPointY(rayEnd, movingPoint);
-      const yMid = movedIntersectsLimitPoint.y;
+      projMove = {        
+        x: computeProjectedPointX(lim, movingPoint),
+        y: movingPoint.y,        
+      }
+    } else {      
       projStart = {
         x: movingPoint.x,
-        y: yStart
+        y: computeProjectedPointY(rayStart, movingPoint)
       }
       projEnd = {
         x: movingPoint.x,
-        y: yEnd
+        y: computeProjectedPointY(rayEnd, movingPoint)
+      }
+      projMove = {
+        x: movingPoint.x,
+        y: computeProjectedPointY(lim, movingPoint)
       }
     }
-
-
   
-    return { rays: [rayStart,rayMid, rayEnd],
-      projected: [lineSegment(stationaryPoint,projStart),lineSegment(stationaryPoint,projEnd)],
+    return { 
+      rays: [rayStart, rayEnd],
+      projected: [lineSegment(stationaryPoint,projStart), lineSegment(stationaryPoint,projMove),lineSegment(stationaryPoint,projEnd)],
       distStat: distStatPt,
       distMoved: distMovPt
       };
@@ -192,7 +168,7 @@ export function linear(s: LineSegment, sortX = false): LinearFunc & LineSegment 
       y = line.k * p.x + line.d;
     }
     return y;
-  }
+  } 
   
   function computeProjectedPointX(
     line: LineSegment & LinearFunc,

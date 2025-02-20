@@ -1,85 +1,83 @@
-import { Point } from 'chart.js';
-import { findData, findMeta, findPoint, initChart } from './chart-util';
-import { convertPointFromPx, intersectionPoint } from './data-point-util';
-import { LineIntersectingLimitChecker } from './limit-checker';
-import { len, lineSegment, range } from './line-seg-util';
+import { Chart, DatasetController } from 'chart.js';
+import { findData, findPoint, initChart } from './chart-util';
+import { intersectionPoint } from './data-point-util';
+import { lineSegment, range } from './line-seg-util';
 import './style.css'
+import { Observable, Subject, interval, take } from 'rxjs';
 
 
 const chartCanvas = document.querySelector<HTMLCanvasElement>('#chart-canvas');
 const ctx = chartCanvas?.getContext('2d');
-/** !.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
-*/
-// setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+
+
 const chart = initChart(ctx!);
-//const datasets = chart.data;
-const curveSegStart = 2  
+const cd = findData('curve',chart);
+const limit = findData('limitUp2',chart);
+const maxCurve = cd!.data.length-1;
+const maxLim = limit!.data.length-1;
+
+
+const dir = 'y';
+let obs$=animate(chart,'start',dir);
+obs$.subscribe({complete: () => {
+  animate(chart,'end',dir).subscribe({
+    complete: () => console.log('DONE')
+  })
+}})
+
+
+function animate(chart: Chart<'line'>, curvePt:'start'|'end', dim: 'x'|'y', ): Observable<void> {
+  const obs$=new Subject<void>();
+  interval(2000).pipe(take(maxCurve*maxLim)).forEach(v => {
+    console.log(`limInd ${Math.floor(v/maxCurve)}, curvInd: ${v%maxCurve}`, curvePt,dim);
+    computeAndVisualizeRanges(chart,Math.floor(v/maxCurve),v%maxCurve,curvePt,dim); 
+    // console.log(v)
+  }).finally(() => {
+    obs$.complete();
+  });
+  return obs$;
+}
+
+
+/**
+ * compute projections
+ * @param chart 
+ */
+function computeAndVisualizeRanges(chart: Chart<'line'>, limsegStart=0, curveSegStart=0, pointOfCurveSeg:'start'|'end'='start', dimension: 'x'|'y'='x') {
+
 const s1 = findPoint('curve',curveSegStart,chart);
 const s2 = findPoint('curve',curveSegStart+1,chart); 
-const seg = lineSegment(s1,s2)
-const limsegStart=3; 
-const l1=findPoint('limitUp2',limsegStart,chart);
+const seg = lineSegment(s1,s2) 
+
+const l1= findPoint('limitUp2',limsegStart,chart);
 const l2 = findPoint('limitUp2',limsegStart+1,chart);
 const lim = lineSegment(l1,l2)
 
-const pointToProcess: 'start'|'end' = 'start'
-const result = range(seg,pointToProcess, "x", lim);
+const pointToProcess = pointOfCurveSeg;
+const result = range(seg,pointToProcess, dimension, lim);
 
 console.log('RESULT',result)
 
-
 const validProjections = result.projected.filter(seg => intersectionPoint(seg, lim)!=null)
-
-if(isNaN(result.rays[1].d)) {
-  console.warn("NAN")
-}
-
-const isec = intersectionPoint(result.rays[1],lim);
-if(isec!=null) {  
-  validProjections.push(result.rays[1]);
-} else {
-  const X = result.rays[1].b.x;
-  const compX = (result.rays[1].b.y - lim.d)/lim.k;
-  console.warn(`not isec`,X, compX )
-
-}
 
 console.log('valid',validProjections) 
 
+const movingPoint = pointToProcess === 'start' ? seg.a : seg.b;
+const diff = validProjections.map(lseg => {
+  let endPt = dimension === 'x' ? lseg.b.x : lseg.b.y;
+  let startPt = dimension === 'x' ? movingPoint.x: movingPoint.y  
+  return {
+    dist: Math.abs(endPt - startPt),
+    point: lseg.b
+  } 
+}).sort((a,b) => a.dist-b.dist );
 
- /* chart.data.datasets.push({ 
-  label: "start",
-  data: [result.rays[0].a,result.rays[0].b]
-})*/
+console.log('sorted',diff)
 
-/*chart.data.datasets.push({
-  label: "mid",
-  data: [result.rays[1].a,result.rays[1].b],
-  borderColor: '#000022',
-  borderWidth: 2,
-  borderDash: [3,3] 
-})*/
-
-/* chart.data.datasets.push({
-  label: "end",
-  data: [result.rays[2].a,result.rays[2].b]
-})*/
+//
+// ------------- VIS -----------------
+//
+chart.data.datasets=chart.data.datasets.filter(ds => !ds.label?.startsWith('projection'));
 
 validProjections.forEach((seg,i) => {
   chart.data.datasets.push({ 
@@ -90,20 +88,6 @@ validProjections.forEach((seg,i) => {
     borderWidth:1
   })  
 })
-
- /* chart.data.datasets.push({
-  label: "projstart",
-  data: [result.projected[0].a,result.projected[0].b], 
-  borderColor: '#00CC00',
-  borderDash: [4,4]
-})*/
-
-/*chart.data.datasets.push({
-  label: "projend",
-  data: [result.projected[1].a,result.projected[1].b],
-  borderColor: '#00CCcc',
-  borderDash: [4,4]
-})*/
 
 chart.setActiveElements([{  
   datasetIndex: 0,
@@ -116,56 +100,4 @@ chart.setActiveElements([{
   index: limsegStart+1
 }])
 chart.update();
-
-/*
-const mov = lineSegment(findPoint('curve',2,chart), findPoint('moved',2,chart))
-console.log(mov)
-
-const drl = findData('dragline',chart);
-drl!.data = [mov.a, mov.b];
-chart.update();
-
-console.log(mov.b,len(mov));
-
-const limitchecker = new LineIntersectingLimitChecker({
-  chart: chart,
-  datasetIndex: 0,
-  elemIndex: 2,
-  seriesMeta: {
-    upperLimitSeries: 'limitUp',
-    lowerLimitSeries: 'limit'
-  }
-})
-
-// console.log('limit ok',limitchecker.isValueWithinLimits({x: 7, y: 4}))
-// console.log('limit mov not ok',limitchecker.isValueWithinLimits(mov.b))
-
-const meta = findMeta('dragline',chart);
-const dataset = findData('dragline',chart);
-
-const pxseg = lineSegment(
-  {x: meta!.data[0].x, y:meta!.data[0].y}, // y:chart.scales.y.height + chart.chartArea.top - meta!.data[0].y},
-  {x: meta!.data[1].x, y: meta!.data[1].y}// y:chart.scales.y.height + chart.chartArea.top - meta!.data[1].y} 
-)
-const pxstartx = chart.scales.x.getPixelForValue((dataset!.data[0]! as Point).x);
-const pxstarty = chart.scales.y.getPixelForValue((dataset!.data[0]! as Point).y) ;
-
-
-console.log("drag starts", pxseg.a.x, pxseg.a.y, pxstartx,pxstarty )
-
-let lineSegPx = pxseg;
-
-const t=performance.now()
-let limitCheckResult = limitchecker.isValueWithinLimits( convertPointFromPx(chart,lineSegPx.b));
-
-const ts=performance.now()
-const corr = limitchecker.computeSuggested(pxseg.a, pxseg.b, limitCheckResult);
-const te=performance.now()
-
-console.log(`---- CORR POS ----`, corr,ts - t, te-ts)
-*/
-
-
-
-
-
+}

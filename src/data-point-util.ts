@@ -210,8 +210,8 @@ export function intersectionPoint(
   const p4 = toPrecPt(l2.b,precision)//l2.a.x <= l2.b.x ? l2.b : l2.a;
 
   // compute slopes
-  let m1 = l1.k!=null ? l1.k:(p2.y - p1.y) / (p2.x - p1.x);
-  let m2 = l2.k!=null ? l2.k: (p4.y - p3.y) / (p4.x - p3.x);
+  const m1 = l1.k!=null ? l1.k:(p2.y - p1.y) / (p2.x - p1.x);
+  const m2 = l2.k!=null ? l2.k: (p4.y - p3.y) / (p4.x - p3.x);
  
 
   const parallel = m1 === m2;
